@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joy's Café Search</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h2>Joy's Café Search</h2>
+    <input type="text" id="searchInput" placeholder="Search for cafes...">
+    <table id="cafeTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const cafeTableBody = document.querySelector('#cafeTable tbody');
+            let cafes = [];
+            let places = {};
+
+            // Fetch cafes and places
+            fetch('https://raw.githubusercontent.com/debojyoti/places-fake-rest-api/master/cafes.json')
+                .then(response => response.json())
+                .then(data => {
+                    cafes = data.cafes;
+                    fetch('https://raw.githubusercontent.com/debojyoti/places-fake-rest-api/master/places.json')
+                        .then(response => response.json())
+                        .then(placeData => {
+                            places = placeData.places.reduce((acc, place) => {
+                                acc[place.id] = place;
+                                return acc;
+                            }, {});
+
+                            displayCafes(cafes, places);
+                        });
+                });
+
+            // Display cafes based on search input
+            searchInput.addEventListener('input', function () {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const filteredCafes = cafes.filter(cafe => cafe.name.toLowerCase().includes(searchTerm));
+                displayCafes(filteredCafes, places);
+            });
+
+            // Function to display cafes
+            function displayCafes(cafes, places) {
+                cafeTableBody.innerHTML = '';
+                cafes.forEach(cafe => {
+                    const place = places[cafe.location_id];
+                    const row = `
+                        <tr>
+                            <td>${cafe.name}</td>
+                            <td>${place ? `${place.street_no}, ${place.locality}, ${place.postal_code}` : 'Location not found'}</td>
+                        </tr>
+                    `;
+                    cafeTableBody.innerHTML += row;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
